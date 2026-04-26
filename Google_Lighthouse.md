@@ -129,3 +129,43 @@ Your metrics from web-vitals:
 
 👉 These are shown under:   
 ✅ Performance tab, not SEO 
+
+## 🔍 Visual breakdown
+### 🚀 Performance (includes Web Vitals)
+This is where you’ll see:
+- LCP
+- CLS
+- INP / TBT
+- Speed Index
+### 🔎 SEO section (different things)
+SEO checks include:
+- meta tags (title, description)
+- mobile friendliness
+- crawlable links
+- structured data
+- robots.txt
+
+👉 Notice: No LCP, CLS, INP here
+
+## 🤔 Then why people connect Web Vitals with SEO?
+
+Because of Google ranking signals.
+
+👉 Google uses Core Web Vitals as a ranking factor
+
+So:
+```
+Web Vitals → Performance → affects SEO ranking
+```
+
+## 🧠 Key insight (important)
+- Lighthouse categorizes Web Vitals under Performance
+- Google uses them for SEO ranking
+
+👉 That’s why confusion happens
+
+## 📊 Clean mental model
+| Concept    | Where it lives | What it affects         |
+| ---------- | -------------- | ----------------------- |
+| Web Vitals | Performance    | UX + SEO ranking        |
+| SEO audits | SEO tab        | Crawlability + indexing |
