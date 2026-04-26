@@ -4,7 +4,6 @@ production-grade Angular + Google Lighthouse setup that you can actually use in 
 + Integrated Lighthouse CI into Angular project to automate performance audits and enforce Core Web Vitals thresholds (LCP, CLS), improving page load performance and preventing regressions via GitHub Actions.
 + Implemented end-to-end frontend performance monitoring system using Lighthouse CI with enforced Core Web Vitals thresholds, integrated into GitHub Actions to block regressions.
 + implemented Real User Monitoring (RUM) using web-vitals to track production performance.
-+ I extended Lighthouse CI to automatically comment performance scores on pull requests and persist metrics as artifacts for trend tracking. This allowed us to monitor performance regressions over time without needing a dedicated dashboard.
 + serve is a lightweight static server with production build (for Lighthouse). use serve to host the Angular production build locally as a static server, ensuring Lighthouse audits run against a realistic HTTP environment instead of development mode.
     - run script : serve -s dist/angular-app -l 3000
     - Takes your built Angular files (dist/angular-app)
@@ -12,7 +11,10 @@ production-grade Angular + Google Lighthouse setup that you can actually use in 
     - Serves them at: http://localhost:3000
     - Is serve a Backend Server? ❌ No — not like: Express.js, NestJS 👉 It’s only: Static file server (No APIs, No database)
     - You could also use: nginx (production) / http-server / Apache HTTP Server
-+ Lighthouse needs a real HTTP server, not file://
++ Web Vitals metrics belong : LCP (Largest Contentful Paint), CLS (Cumulative Layout Shift), INP (Interaction to Next Paint)
+    - 👉 These are shown under: ✅ Performance tab, not SEO
++ Lighthouse needs a real HTTP server. 
++ 🧭 Google Lighthouse splits audits into categories: Performance, Accessibility, Best Practices, SEO
 + 📁 lighthouse-report : Save inside /lighthouse folder**   
     📊 Report saved at: ./lighthouse/lighthouse-report.html 
     ```
@@ -37,8 +39,11 @@ production-grade Angular + Google Lighthouse setup that you can actually use in 
 
 + ✅ Correct flow: 1) npm run build:prod 2) npm run serve:prod 3) npm run lighthouse
 
+## Lighthouse Report
 <img src="imgs/lighthouse_report.png" width="80%" />
 
+## Web Vitals metrics
+<img src="imgs/web_vitals.png" width="80%" />
 
 ## Run Application
 <img src="imgs/run_application.png" width="80%" />
@@ -262,8 +267,7 @@ await chrome.kill();
 - npm run lighthouse (your lighthouse-run.js)
 - Manual testing
 
-**📁 lighthouse-report : Save inside /lighthouse folder**   
-📊 Report saved at: ./lighthouse/lighthouse-report.html 
+**📊 lighthouse-report : Save inside /lighthouse folder**  
 ```
 lighthouse-angular/
  ├── lighthouse/                 ✅ new folder
