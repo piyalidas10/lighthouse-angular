@@ -1,0 +1,86 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install deps
+        run: npm install
+
+      - name: Build Angular
+        run: npm run build -- --configuration production
+
+      - name: Serve app
+        run: |
+          npm install -g serve
+          serve -s dist/lighthouse-angular -l 3000 &
+
+      # ⏳ Wait for server
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000
+
+      # 🚀 Run Lighthouse CI (store locally + temp upload)
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli
+          lhci autorun \
+            --upload.target=filesystem \
+            --upload.outputDir=./lhci-reports
+
+      # 📊 Upload full reports
+      - name: Upload Lighthouse Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: ./lhci-reports
+          retention-days: 7
+
+      # 📈 Save performance score (trend tracking)
+      - name: Extract performance score
+        run: |
+          node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('./lhci-reports/manifest.json'));
+          const score = data[0].summary.performance;
+          fs.writeFileSync('score.json', JSON.stringify({ performance: score }));
+          "
+
+      - name: Upload Score Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-score
+          path: score.json
+          retention-days: 30
+
+      # 💬 Comment on PR (only for PRs)
+      - name: Comment Lighthouse Results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('./lhci-reports/manifest.json'));
+            const scores = data[0].summary;
+
+            const comment = `
+🚀 **Lighthouse Report**
+
+- 🟢 Performance: ${Math.round(scores.performance * 100)}
+- ♿ Accessibility: ${Math.round(scores.accessibility * 100)}
+- ✅ Best Practices: ${Math.round(scores['best-practices'] * 100)}
+- 🔍 SEO: ${Math.round(scores.seo * 100)}
+`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
