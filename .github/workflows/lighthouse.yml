@@ -9,28 +9,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      # 📥 Checkout repo
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
+      # 📦 Install dependencies
       - name: Install deps
         run: npm install
 
+      # 🏗️ Build Angular app
       - name: Build Angular
         run: npm run build -- --configuration production
 
+      # 🌐 Serve app (stable background process)
       - name: Serve app
         run: |
           npm install -g serve
           serve -s dist/lighthouse-angular/browser -l 3000 &
 
-      # ⏳ Wait for server
+      # ⏳ Wait until app is live
       - name: Wait for server
         run: npx wait-on http://localhost:3000
       
-      # Add HARD DEBUG before LHCI
+      # 🔍 Debug (optional but useful)
       - name: Debug server
         run: |
           echo "Checking server..."
           curl -I http://localhost:3000 || echo "Server not reachable"
+          echo "---- SERVER LOG ----"
+          cat server.log || true
 
       # 🚀 Run Lighthouse CI (store locally + temp upload)
       - name: Run Lighthouse CI
@@ -48,40 +58,66 @@ jobs:
           path: ./lhci-reports
           retention-days: 7
 
-      # 📈 Save performance score (trend tracking)
-      - name: Extract performance score
+      # ⚡ Extract Web Vitals + scores
+      - name: Extract Web Vitals
         run: |
           node -e "
           const fs = require('fs');
-          const data = JSON.parse(fs.readFileSync('./lhci-reports/manifest.json'));
-          const score = data[0].summary.performance;
-          fs.writeFileSync('score.json', JSON.stringify({ performance: score }));
-          "
 
-      - name: Upload Score Artifact
+          const manifest = JSON.parse(fs.readFileSync('./lhci-reports/manifest.json'));
+          const report = JSON.parse(fs.readFileSync(manifest[0].jsonPath));
+
+          const result = {
+            performance: Math.round(report.categories.performance.score * 100),
+            accessibility: Math.round(report.categories.accessibility.score * 100),
+            bestPractices: Math.round(report.categories['best-practices'].score * 100),
+            seo: Math.round(report.categories.seo.score * 100),
+
+            lcp: report.audits['largest-contentful-paint'].displayValue,
+            cls: report.audits['cumulative-layout-shift'].displayValue,
+            tbt: report.audits['total-blocking-time'].displayValue,
+            fcp: report.audits['first-contentful-paint'].displayValue,
+            speedIndex: report.audits['speed-index'].displayValue
+          };
+
+          fs.writeFileSync('web-vitals.json', JSON.stringify(result, null, 2));
+          console.log(result);
+          "
+      
+      # 📈 Upload Web Vitals JSON
+      - name: Upload Web Vitals
         uses: actions/upload-artifact@v4
         with:
-          name: lighthouse-score
-          path: score.json
+          name: web-vitals
+          path: web-vitals.json
           retention-days: 30
-
-      # 💬 Comment on PR (only for PRs)
+          
+      # 💬 Comment results on PR
       - name: Comment Lighthouse Results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const data = JSON.parse(fs.readFileSync('./lhci-reports/manifest.json'));
-            const scores = data[0].summary;
+
+            const data = JSON.parse(fs.readFileSync('web-vitals.json'));
 
             const comment =
               "🚀 **Lighthouse Report**\n\n" +
-              "- 🟢 Performance: " + Math.round(scores.performance * 100) + "\n" +
-              "- ♿ Accessibility: " + Math.round(scores.accessibility * 100) + "\n" +
-              "- ✅ Best Practices: " + Math.round(scores['best-practices'] * 100) + "\n" +
-              "- 🔍 SEO: " + Math.round(scores.seo * 100);
-      
+
+              "### 📊 Scores\n" +
+              "- 🟢 Performance: " + data.performance + "\n" +
+              "- ♿ Accessibility: " + data.accessibility + "\n" +
+              "- ✅ Best Practices: " + data.bestPractices + "\n" +
+              "- 🔍 SEO: " + data.seo + "\n\n" +
+
+              "### ⚡ Core Web Vitals (Lab)\n" +
+              "- ⏱️ LCP: " + data.lcp + "\n" +
+              "- 📐 CLS: " + data.cls + "\n" +
+              "- 🧱 TBT: " + data.tbt + "\n" +
+              "- 🎨 FCP: " + data.fcp + "\n" +
+              "- ⚡ Speed Index: " + data.speedIndex + "\n";
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
