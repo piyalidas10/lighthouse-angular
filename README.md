@@ -43,11 +43,15 @@ production-grade Angular + Google Lighthouse setup that you can actually use in 
 ### Local
 <img src="imgs/lighthouse_report.png" width="80%" />
 
-### Run Github Pipeline with PR
+### Run Github Pipeline with raising the PR or commiting directly in main branch
 <img src="imgs/lighthouse_report_pipeline.png" width="80%" />
 
 ## Web Vitals metrics
+### Local
 <img src="imgs/web_vitals.png" width="80%" />
+
+### Run Github Pipeline with raising the PR or commiting directly in main branch
+<img src="imgs/web_vitals_pipeline.png" width="80%" />
 
 ## Run Application
 <img src="imgs/run_application.png" width="80%" />
