@@ -20,11 +20,17 @@ jobs:
       - name: Serve app
         run: |
           npm install -g serve
-          serve -s dist/lighthouse-angular -l 3000 &
+          serve -s dist/lighthouse-angular/browser -l 3000 &
 
       # ⏳ Wait for server
       - name: Wait for server
         run: npx wait-on http://localhost:3000
+      
+      # Add HARD DEBUG before LHCI
+      - name: Debug server
+        run: |
+          echo "Checking server..."
+          curl -I http://localhost:3000 || echo "Server not reachable"
 
       # 🚀 Run Lighthouse CI (store locally + temp upload)
       - name: Run Lighthouse CI
@@ -69,15 +75,13 @@ jobs:
             const data = JSON.parse(fs.readFileSync('./lhci-reports/manifest.json'));
             const scores = data[0].summary;
 
-            const comment = `
-🚀 **Lighthouse Report**
-
-- 🟢 Performance: ${Math.round(scores.performance * 100)}
-- ♿ Accessibility: ${Math.round(scores.accessibility * 100)}
-- ✅ Best Practices: ${Math.round(scores['best-practices'] * 100)}
-- 🔍 SEO: ${Math.round(scores.seo * 100)}
-`;
-
+            const comment =
+              "🚀 **Lighthouse Report**\n\n" +
+              "- 🟢 Performance: " + Math.round(scores.performance * 100) + "\n" +
+              "- ♿ Accessibility: " + Math.round(scores.accessibility * 100) + "\n" +
+              "- ✅ Best Practices: " + Math.round(scores['best-practices'] * 100) + "\n" +
+              "- 🔍 SEO: " + Math.round(scores.seo * 100);
+      
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
