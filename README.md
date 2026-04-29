@@ -40,7 +40,11 @@ production-grade Angular + Google Lighthouse setup that you can actually use in 
 + ✅ Correct flow: 1) npm run build:prod 2) npm run serve:prod 3) npm run lighthouse
 
 ## Lighthouse Report
+### Local
 <img src="imgs/lighthouse_report.png" width="80%" />
+
+### Run Github Pipeline with PR
+<img src="imgs/lighthouse_report_pipeline.png" width="80%" />
 
 ## Web Vitals metrics
 <img src="imgs/web_vitals.png" width="80%" />
